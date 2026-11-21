@@ -1,24 +1,26 @@
 import json
 from pathlib import Path
+from datetime import date, datetime
 
 def showOption():
     print("1. Ajouter une dépense")
     print("2. Voir toutes les dépenses")
     print("3. Voir les dépenses par categorie")
-    print("4. Voir le total")
-    print("5. Supprimer une dépense")
-    print("6. Supprimer toutes les dépenses")
-    print("7. Quitter")
+    print("4. Voir les dépenses d'un mois")
+    print("5. Voir le total")
+    print("6. Supprimer une dépense")
+    print("7. Supprimer toutes les dépenses")
+    print("8. Quitter")
     print("")
 
     while True:
-        choice = input("Entrée un chiffre (1-7): ")
+        choice = input("Entrée un chiffre (1-8): ")
         print("")
         try:
             choice = int(choice)
-            if choice >= 1 and choice <= 7:
+            if choice >= 1 and choice <= 8:
                 return choice
-            print("La valeur doit etre comprise entre 1 et 7")
+            print("La valeur doit etre comprise entre 1 et 8")
             print("")
         except ValueError:
             print("La valeur entrée doit etre un entier")
@@ -65,19 +67,14 @@ def addExpense(allDepense):
             print("La valeur doit etre un nombre ou un float")
             print("")
     categorie = showCategorie()
+    dateTime = date.today().strftime("%d/%m/%Y")
     print("Vous avez ajoutez:\n")
     print(f"Nom: {name}")
     print(f"Montant: {price}")
     print(f"Categorie: {categorie}")
+    print(f"Date: {dateTime}")
     print("")
-    for dic in allDepense:
-        if dic["name"] == name and dic["categorie"] == categorie:
-            print(f"Il y avait deja {dic['montant']} pour {dic['name']} dans la categorie {categorie}")
-            dic["montant"] += price
-            print(f"Montant total pour {dic['name']} dans {categorie}: {dic['montant']}")
-            print("")
-            return
-    allDepense.append({"name": name, "montant": price, "categorie": categorie})
+    allDepense.append({"name": name, "montant": price, "categorie": categorie, "date": dateTime})
 
 def showExpense(allDepense):
     if len(allDepense) == 0:
@@ -89,6 +86,7 @@ def showExpense(allDepense):
         print(f"Nom: {dic['name']}")
         print(f"Montant: {dic['montant']}")
         print(f"Categorie: {dic['categorie']}")
+        print(f"Date: {dic['date']}")
         print("")
 
 def showTotal(allDepense):
@@ -105,6 +103,28 @@ def countName(allDepense, name):
             cnt += 1
     return cnt
 
+def showExpenseByName(allDepense, name):
+    allDepenseByName = []
+    i = 1
+    for dic in allDepense:
+        if dic['name'] == name:
+            allDepenseByName.append(dic)
+            print(f"{i}. {dic['name']} - {dic['categorie']} - {dic['montant']} - {dic['date']}")
+            i += 1
+    print("")
+    while True:
+        n = input("Entrée le numéro de la dépense à supprimé: ")
+        print("")
+        try:
+            n = int(n)
+            if n >= 1 and n < i:
+                return allDepenseByName[n-1]
+            print(f"La valeur doit etre comprise entre 1 et {i}")
+            print("")
+        except ValueError:
+            print("La valeur doit etre un entier")
+            print("")
+
 def supExpense(allDepense):
     if len(allDepense) == 0:
         print("Il n'y a aucune dépense a supprimé")
@@ -114,24 +134,18 @@ def supExpense(allDepense):
     print("")
     cnt = countName(allDepense, dep)
     if cnt > 1:
-        print("Il y a plusieurs depense à ce nom veuillez choisir une categorie")
+        print("Il y a plusieurs depense à ce nom veuillez choisir laquel supprimé")
         print("")
-        cat = showCategorie()
-        for dic in allDepense:
-            if dic["name"] == dep and dic["categorie"] == cat:
-                price = dic["montant"]
-                allDepense.remove(dic)
-                print(f"Vous avez supprimé {dep} d'un montant de {price} dans {cat}")
-                print("")
-                return
-        print(f"La catégorie {cat} n'existe pas pour {dep}. Rien n'a été supprimé")
+        depense = showExpenseByName(allDepense, dep)
+        allDepense.remove(depense)
+        print(f"{depense['name']} - {depense['categorie']} - {depense['montant']} - {depense['date']} à été supprimé")
         print("")
     elif cnt == 1:
         for dic in allDepense:
             if dic["name"] == dep:
                 price = dic["montant"]
                 allDepense.remove(dic)
-                print(f"Vous avez supprimé {dep} d'un montant de {price}")
+                print(f"Vous avez supprimé {dep} d'un montant de {price} à la date du {dic['date']}")
                 print("")
                 return
     else:
@@ -162,6 +176,7 @@ def showExpenseByCategorie(allDepense):
             print(f"Nom: {dic['name']}")
             print(f"Montant: {dic['montant']}")
             print(f"Categorie: {dic['categorie']}")
+            print(f"Date: {dic['date']}")
             print("")
             flag = True
     if flag:
@@ -170,6 +185,38 @@ def showExpenseByCategorie(allDepense):
         print(f"Il n'y a aucune dépense pour {cat}")
         print("")
         return
+
+def showExpenseByMonth(allDepense):
+    month = ["Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre"]
+    while True:
+        mois = input("Choisissez le mois que vous voulez affiché (1-12): ")
+        print("")
+        try:
+            mois = int(mois)
+            if mois >= 1 and mois <= 12:
+                print(f"Vous avez choisit le mois de {month[mois-1]}")
+                print("")
+                flag = False
+                for dic in allDepense:
+                    if int(dic["date"].split("/")[1]) == mois:
+                        print(f"Nom: {dic['name']}")
+                        print(f"Montant: {dic['montant']}")
+                        print(f"Categorie: {dic['categorie']}")
+                        print(f"Date: {dic['date']}")
+                        print("")
+                        flag = True
+                if flag:
+                    return
+                print(f"Il n'y a aucune dépense pour le mois de {month[mois-1]}")
+                print("")
+                return
+            else:
+                print("Le mois doit etre compris entre 1 et 12")
+                print("")
+        except ValueError:
+            print("La valeur doit etre un entier")
+            print("")
+
 
 def saveData(allDepense):
     with open("données.json", "w", encoding="utf-8") as fichier:
@@ -201,12 +248,13 @@ while True:
     elif value == 3:
         showExpenseByCategorie(allDepenseListe)
     elif value == 4:
-        showTotal(allDepenseListe)
+        showExpenseByMonth(allDepenseListe)
     elif value == 5:
+        showTotal(allDepenseListe)
+    elif value == 6:
         supExpense(allDepenseListe)
         saveData(allDepenseListe)
-        
-    elif value == 6:
+    elif value == 7:
         supAllDepense(allDepenseListe)
         saveData(allDepenseListe)
     else:
